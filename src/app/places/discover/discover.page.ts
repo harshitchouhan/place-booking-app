@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { Place } from '../place.model';
 import { PlacesService } from '../places.service';
 
@@ -7,16 +8,24 @@ import { PlacesService } from '../places.service';
   templateUrl: './discover.page.html',
   styleUrls: ['./discover.page.scss'],
 })
-export class DiscoverPage implements OnInit {
+export class DiscoverPage implements OnInit, OnDestroy {
   loadedPlaces: Place[];
+
+  private _placesSub: Subscription;
 
   constructor(private placesService: PlacesService) {}
 
   ngOnInit() {
-    this.loadedPlaces = this.placesService.places;
+    this._placesSub = this.placesService.places.subscribe((places) => {
+      this.loadedPlaces = places;
+    });
+  }
+
+  ngOnDestroy() {
+    if (this._placesSub) this._placesSub.unsubscribe();
   }
 
   onFilterUpdate(event: any) {
-    console.log(event.detail)
+    console.log(event.detail);
   }
 }
