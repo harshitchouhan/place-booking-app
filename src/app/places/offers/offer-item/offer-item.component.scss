@@ -6,3 +6,12 @@
     margin-left: 5px;
   }
 }
+
+h1 {
+  font-size: 18px;
+  border: 1px solid var(--ion-color-primary);
+  padding: .5rem;
+  border-radius: 5px;
+  color: var(--ion-color-primary);
+  margin-bottom: .5rem;
+}
