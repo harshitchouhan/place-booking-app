@@ -10,16 +10,6 @@ import { Place } from './place.model';
 export class PlacesService {
   private _places = new BehaviorSubject<Place[]>([
     new Place(
-      'p1',
-      'Manhattan Mansion',
-      'In the heart of New York City.',
-      'https://images.unsplash.com/photo-1588947484738-1d9afc3224d7?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=334&q=80',
-      149.99,
-      new Date('2019-01-01'),
-      new Date('2019-12-31'),
-      'abc'
-    ),
-    new Place(
       'p2',
       "L'Amour Toujours",
       'A romantic place in Paris!',
@@ -27,8 +17,19 @@ export class PlacesService {
       189.99,
       new Date('2019-01-01'),
       new Date('2019-12-31'),
-      'abc'
+      'xyz'
     ),
+    new Place(
+      'p1',
+      'Manhattan Mansion',
+      'In the heart of New York City.',
+      'https://images.unsplash.com/photo-1588947484738-1d9afc3224d7?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=334&q=80',
+      149.99,
+      new Date('2019-01-01'),
+      new Date('2019-12-31'),
+      'xyz'
+    ),
+
     new Place(
       'p3',
       'The Foggy Palace',
