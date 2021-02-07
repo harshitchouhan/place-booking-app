@@ -1,14 +1,22 @@
+import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
-import { take, map, tap, delay } from 'rxjs/operators';
+import { take, map, tap, delay, switchMap } from 'rxjs/operators';
 import { AuthService } from '../auth/auth.service';
 import { Place } from './place.model';
 
-@Injectable({
-  providedIn: 'root',
-})
-export class PlacesService {
-  private _places = new BehaviorSubject<Place[]>([
+interface PlaceData {
+  availableFrom: string;
+  availableTo: string;
+  description: string;
+  imageUrl: string;
+  price: number;
+  title: string;
+  userId: string;
+}
+
+/**
+ * 
     new Place(
       'p2',
       "L'Amour Toujours",
@@ -40,12 +48,48 @@ export class PlacesService {
       new Date('2019-12-31'),
       'abc'
     ),
-  ]);
+  
+ */
 
-  constructor(private authService: AuthService) {}
+@Injectable({
+  providedIn: 'root',
+})
+export class PlacesService {
+  private _places = new BehaviorSubject<Place[]>([]);
+
+  constructor(private authService: AuthService, private http: HttpClient) {}
 
   get places() {
     return this._places.asObservable();
+  }
+
+  fetchPlaces() {
+    return this.http.get<{ [key: string]: PlaceData }>('https://place-booking-app-87b7e-default-rtdb.firebaseio.com/offered-places.json').pipe(
+      map((resData) => {
+        const places = [];
+        for (const key in resData) {
+          if (resData.hasOwnProperty(key)) {
+            places.push(
+              new Place(
+                key,
+                resData[key].title,
+                resData[key].description,
+                resData[key].imageUrl,
+                resData[key].price,
+                new Date(resData[key].availableFrom),
+                new Date(resData[key].availableTo),
+                resData[key].userId
+              )
+            );
+          }
+        }
+
+        return places;
+      }),
+      tap((places) => {
+        this._places.next(places);
+      })
+    );
   }
 
   getPlace(id: string) {
@@ -69,22 +113,33 @@ export class PlacesService {
       this.authService.userId
     );
 
-    return this.places.pipe(
-      take(1),
-      delay(1000),
-      tap((places) => {
-        this._places.next(places.concat(newPlace));
+    let generatedId: string;
+
+    return this.http
+      .post<{ name: string }>('https://place-booking-app-87b7e-default-rtdb.firebaseio.com/offered-places.json', {
+        ...newPlace,
+        id: null,
       })
-    );
+      .pipe(
+        switchMap((resData) => {
+          generatedId = resData.name;
+          return this.places;
+        }),
+        take(1),
+        tap((places) => {
+          newPlace.id = generatedId;
+          this._places.next(places.concat(newPlace));
+        })
+      );
   }
 
   updatePlace(placeId: string, title: string, description: string) {
+    let updatedPlaces: Place[];
     return this.places.pipe(
       take(1),
-      delay(1000),
-      tap((places) => {
+      switchMap((places) => {
         const updatedPlaceIndex = places.findIndex((pl) => pl.id === placeId);
-        const updatedPlaces = [...places];
+        updatedPlaces = [...places];
         const oldPlace = updatedPlaces[updatedPlaceIndex];
 
         updatedPlaces[updatedPlaceIndex] = new Place(
@@ -98,6 +153,12 @@ export class PlacesService {
           oldPlace.userId
         );
 
+        return this.http.put(`https://place-booking-app-87b7e-default-rtdb.firebaseio.com/offered-places/${placeId}.json`, {
+          ...updatedPlaces[updatedPlaceIndex],
+          id: null,
+        });
+      }),
+      tap(() => {
         this._places.next(updatedPlaces);
       })
     );
